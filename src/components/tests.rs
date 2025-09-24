@@ -1,33 +1,29 @@
-use super::prelude::*;
 use regex::Regex;
 use std::error::Error;
-use std::fs;
 use std::path::Path;
+use tokio::fs;
+use async_recursion::async_recursion;
 
-pub fn count_tests_in_tests_folder() -> MyResult<u64> {
+pub async fn count_tests_in_tests_folder() -> Result<u64, Box<dyn Error + Send + Sync>> {
     let tests_dir = Path::new("./tests");
 
-    fn inner(dir: &Path, re: &Regex) -> MyResult<u64> {
+    #[async_recursion]
+    async fn inner(dir: &Path, re: &Regex) -> Result<u64, Box<dyn Error + Send + Sync>> {
         let mut total: u64 = 0;
 
-        for entry in fs::read_dir(dir).map_err(|e| {
+        let mut entries = fs::read_dir(dir).await.map_err(|e| {
             Box::<dyn Error + Send + Sync>::from(format!("read_dir {}: {}", dir.display(), e))
-        })? {
-            let entry = entry.map_err(|e| {
-                Box::<dyn Error + Send + Sync>::from(format!(
-                    "reading entry in {}: {}",
-                    dir.display(),
-                    e
-                ))
-            })?;
+        })?;
+
+        while let Some(entry) = entries.next_entry().await? {
             let path = entry.path();
 
             if path.is_dir() {
-                total = total.checked_add(inner(&path, re)?).ok_or_else(|| {
+                total = total.checked_add(inner(&path, re).await?).ok_or_else(|| {
                     Box::<dyn Error + Send + Sync>::from("overflow counting tests")
                 })?;
             } else if path.extension().and_then(|e| e.to_str()) == Some("rs") {
-                let content = fs::read_to_string(&path).map_err(|e| {
+                let content = fs::read_to_string(&path).await.map_err(|e| {
                     Box::<dyn Error + Send + Sync>::from(format!(
                         "failed to read {}: {}",
                         path.display(),
@@ -46,5 +42,5 @@ pub fn count_tests_in_tests_folder() -> MyResult<u64> {
     }
 
     let test_macro_re = Regex::new(r"#\[\s*(?:\w+:)?test\s*\]").unwrap();
-    inner(tests_dir, &test_macro_re)
+    inner(tests_dir, &test_macro_re).await
 }

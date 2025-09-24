@@ -2,21 +2,6 @@ use super::prelude::*;
 use std::process::Stdio;
 use tokio::process::Command;
 
-#[derive(clap::Args, Debug, Clone)]
-pub struct GitArgs {
-    /// Token to use for the push (avoid; prefer env var)
-    #[arg(long)]
-    pub token: Option<String>,
-
-    /// Git remote name
-    #[arg(long, default_value = "origin")]
-    pub remote: String,
-
-    /// Branch to push
-    #[arg(long, default_value = "master")]
-    pub branch: String,
-}
-
 pub async fn git_push(
     token_arg: Option<String>,
     remote_or_url: &str,

@@ -1,4 +1,3 @@
-use super::prelude::*;
 use clap::Subcommand;
 
 #[derive(clap::Args, Debug, Clone)]
@@ -20,11 +19,11 @@ pub struct Args {
     pub branch: String,
 
     /// Badge file name
-    #[arg(long, default_value = "crates_io_total_downloads.svg")]
+    #[arg(long, default_value = "downloads.svg")]
     pub badge_name: String,
 
     /// Badge label (e.g., "downloads")
-    #[arg(long, default_value = "crates downloads")]
+    #[arg(long, default_value = "downloads")]
     pub label: String,
 
     /// Count value to display in badge
@@ -42,7 +41,6 @@ pub struct Args {
 
 #[derive(Subcommand, Debug)]
 pub enum Commands {
-    Git(GitArgs),
     CratesIoBadges(Args),
     TestsBadges(Args),
 }
