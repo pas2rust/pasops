@@ -9,7 +9,7 @@ exclude = [
     "tests/*",
     "tests",
 ]
-categories = ["cli"]
+categories = []
 description = "cli"
 keywords = ["cli"]
 authors = ["pas2rust <pas2000@proton.me>"]
@@ -19,5 +19,5 @@ documentation = "https://docs.rs/pasops"
 [dependencies]
 clap = { version = "4", features = ["derive"]}
 neto = { version = "0", features = ["json"] }
-regex = "1.11.2"
+regex = "1"
 tokio = { version = "1", features = ["full"] }
