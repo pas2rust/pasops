@@ -1,0 +1,24 @@
+[package]
+name = "pasops"
+version = "0.0.1"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/pas2rust/pasops"
+readme = "README.md"
+exclude = [
+    "tests/*",
+    "tests",
+    "main.rs"
+]
+categories = ["cli"]
+description = "cli"
+keywords = ["cli"]
+authors = ["pas2rust <pas2000@proton.me>"]
+homepage = "https://github.com/pas2rust/pasops"
+documentation = "https://docs.rs/pasops"
+
+[dependencies]
+clap = { version = "4", features = ["derive"]}
+neto = { version = "0", features = ["json"] }
+regex = "1.11.2"
+tokio = { version = "1", features = ["full"] }
