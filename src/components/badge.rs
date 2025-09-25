@@ -29,14 +29,5 @@ pub async fn update_badge(args: &Args) -> MyResult<()> {
     let mut file = tokio::fs::File::create(&args.badge_name).await?;
     file.write_all(svg.as_bytes()).await?;
 
-    setup_git_identity().await?;
-    git_add_or_update_remote(&args.remote, &args.url).await?;
-    git_add(&args.badge_name, args.token.clone()).await?;
-    git_commit(
-        &format!("chore: Update badge {} ({})", args.badge_name, count),
-        args.token.clone(),
-    ).await?;
-    git_push(args.token.clone(), &args.remote, &args.branch).await?;
-
     Ok(())
 }

@@ -2,22 +2,9 @@ use clap::Subcommand;
 
 #[derive(clap::Args, Debug, Clone)]
 pub struct Args {
-    /// Crates.io username to query (e.g., pas2rust)
+    /// Badge file name
     #[arg(long, default_value = "pas2rust")]
     pub user: String,
-
-    /// Token to use for the push (avoid; prefer env var)
-    #[arg(long)]
-    pub token: Option<String>,
-
-    /// Git remote name
-    #[arg(long, default_value = "origin")]
-    pub remote: String,
-
-    /// Branch to push
-    #[arg(long, default_value = "master")]
-    pub branch: String,
-
     /// Badge file name
     #[arg(long, default_value = "tests.svg")]
     pub badge_name: String,
@@ -37,10 +24,6 @@ pub struct Args {
     /// Optional badge logo (e.g., "rust")
     #[arg(long)]
     pub logo: Option<String>,
-
-    /// Url git repo destination
-    #[arg(long, default_value = "https://github.com/pas2rust/badges.git")]
-    pub url: String,
 }
 
 #[derive(Subcommand, Debug)]
