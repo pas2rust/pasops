@@ -19,11 +19,11 @@ pub struct Args {
     pub branch: String,
 
     /// Badge file name
-    #[arg(long, default_value = "downloads.svg")]
+    #[arg(long, default_value = "tests.svg")]
     pub badge_name: String,
 
     /// Badge label (e.g., "downloads")
-    #[arg(long, default_value = "downloads")]
+    #[arg(long, default_value = "tests")]
     pub label: String,
 
     /// Count value to display in badge
@@ -37,6 +37,10 @@ pub struct Args {
     /// Optional badge logo (e.g., "rust")
     #[arg(long)]
     pub logo: Option<String>,
+
+    /// Url git repo destination
+    #[arg(long, default_value = "https://github.com/pas2rust/badges.git")]
+    pub url: String,
 }
 
 #[derive(Subcommand, Debug)]

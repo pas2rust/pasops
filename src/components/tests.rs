@@ -1,8 +1,8 @@
+use async_recursion::async_recursion;
 use regex::Regex;
 use std::error::Error;
 use std::path::Path;
 use tokio::fs;
-use async_recursion::async_recursion;
 
 pub async fn count_tests_in_tests_folder() -> Result<u64, Box<dyn Error + Send + Sync>> {
     let tests_dir = Path::new("./tests");

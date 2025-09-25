@@ -76,3 +76,45 @@ pub async fn git_commit(message: &str, token: Option<String>) -> MyResult<()> {
 
     Ok(())
 }
+
+pub async fn git_add_remote(name: &str, url: &str) -> MyResult<()> {
+    let status = Command::new("git")
+        .arg("remote")
+        .arg("add")
+        .arg(name)
+        .arg(url)
+        .status()
+        .await?;
+
+    if !status.success() {
+        return Err(format!("git remote add {} failed", name).into());
+    }
+    Ok(())
+}
+
+pub async fn setup_git_identity() -> MyResult<()> {
+    let status_name = Command::new("git")
+        .arg("config")
+        .arg("--global")
+        .arg("user.name")
+        .arg("github-actions[bot]")
+        .status()
+        .await?;
+    
+    if !status_name.success() {
+        return Err("git config user.name failed".into());
+    }
+
+    let status_email = Command::new("git")
+        .arg("config")
+        .arg("--global")
+        .arg("user.email")
+        .arg("github-actions[bot]@users.noreply.github.com")
+        .status()
+        .await?;
+    if !status_email.success() {
+        return Err("git config user.email failed".into());
+    }
+
+    Ok(())
+}
