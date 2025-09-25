@@ -6,3 +6,4 @@ pub use super::dto::*;
 pub use super::http::*;
 pub use super::run::*;
 pub use super::tests::*;
+pub use super::git::*;

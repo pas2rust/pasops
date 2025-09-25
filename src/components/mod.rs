@@ -7,3 +7,4 @@ pub mod http;
 pub mod prelude;
 pub mod run;
 pub mod tests;
+pub mod git;

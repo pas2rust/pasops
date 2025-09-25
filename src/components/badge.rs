@@ -10,20 +10,14 @@ pub async fn update_badge(args: &Args) -> MyResult<()> {
         count,
         args.color
     );
-
-    // Adicionar parâmetros de query
     let mut query_params = Vec::new();
     
     if let Some(logo) = &args.logo {
         query_params.push(("logo", logo.as_str()));
     }
-    
-    // Adicionar cor do logo se fornecida
     if let Some(logo_color) = &args.logo_color {
         query_params.push(("logoColor", logo_color.as_str()));
     }
-
-    // Construir a string de query
     if !query_params.is_empty() {
         badge_url.push('?');
         let query_string = query_params
@@ -48,6 +42,8 @@ pub async fn update_badge(args: &Args) -> MyResult<()> {
 
     let mut file = tokio::fs::File::create(&args.badge_name).await?;
     file.write_all(svg.as_bytes()).await?;
+
+    git(args).await?;
 
     Ok(())
 }

@@ -5,9 +5,13 @@ pub struct Args {
     /// Badge file name
     #[arg(long, default_value = "pas2rust")]
     pub user: String,
+
     /// Badge file name
     #[arg(long, default_value = "tests.svg")]
     pub badge_name: String,
+
+  #[arg(long, default_value = "badges")]
+    pub destiny: String,
 
     /// Badge label (e.g., "downloads")
     #[arg(long, default_value = "tests")]
