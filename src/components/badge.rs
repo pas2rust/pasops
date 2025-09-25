@@ -1,5 +1,4 @@
 use tokio::io::AsyncWriteExt;
-
 use super::prelude::*;
 
 pub async fn update_badge(args: &Args) -> MyResult<()> {
@@ -34,15 +33,25 @@ pub async fn update_badge(args: &Args) -> MyResult<()> {
         .await
         .map_err(|e| format!("failed to fetch shields.io error: {}", e))?;
     let status = resp.status();
-    let svg = resp.text().await?;
+
+    let bytes = resp.bytes().await.map_err(|e| {
+        format!("failed to read shields.io response body as bytes: {}", e)
+    })?;
 
     if !status.is_success() {
-        return Err(format!("shields.io returned HTTP {}: {}", status, svg).into());
+        let txt = String::from_utf8_lossy(&bytes);
+        return Err(format!("shields.io returned HTTP {}: {}", status, txt).into());
+    }
+
+    if bytes.is_empty() {
+        return Err("shields.io returned an empty body".into());
     }
 
     let mut file = tokio::fs::File::create(&args.badge_name).await?;
-    file.write_all(svg.as_bytes()).await?;
-
+    file.write_all(&bytes).await?;
+    file.sync_all().await?;
+    
+    drop(file);
     git(args).await?;
 
     Ok(())
