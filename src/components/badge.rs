@@ -11,7 +11,7 @@ pub async fn update_badge(args: &Args) -> MyResult<()> {
         args.color
     );
     let mut query_params = Vec::new();
-    
+
     if let Some(logo) = &args.logo {
         query_params.push(("logo", logo.as_str()));
     }

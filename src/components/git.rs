@@ -1,20 +1,33 @@
 use super::prelude::*;
 use std::path::Path;
-use tokio::process::Command;
+use tokio::{fs, process::Command};
 
 pub async fn git(args: &Args) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let repo_dir = Path::new(&args.destiny).canonicalize()?;
+    let repo_dir = Path::new(&args.destiny);
+    if !repo_dir.exists() {
+        return Err(format!("destination '{}' does not exist", args.destiny).into());
+    }
 
-    if !repo_dir.is_dir() {
-        return Err(format!("'{}' is not a directory", repo_dir.display()).into());
+    let src = Path::new(&args.badge_name);
+    if !src.exists() {
+        return Err(format!("source file '{}' not found", src.display()).into());
     }
-    if !repo_dir.join(".git").exists() {
-        return Err(format!("'{}' doesn't look like a git repo (no .git)", repo_dir.display()).into());
+
+    let filename = src
+        .file_name()
+        .and_then(|s| s.to_str())
+        .ok_or("invalid badge file name")?;
+
+    let dest_path = repo_dir.join(filename);
+    if dest_path.exists() {
+        fs::remove_file(&dest_path).await?;
     }
+
+    fs::rename(&src, &dest_path).await?;
 
     let status = Command::new("git")
         .args(&["config", "user.name", "github-actions[bot]"])
-        .current_dir(&repo_dir)
+        .current_dir(repo_dir)
         .status()
         .await?;
     if !status.success() {
@@ -22,8 +35,12 @@ pub async fn git(args: &Args) -> Result<(), Box<dyn std::error::Error + Send + S
     }
 
     let status = Command::new("git")
-        .args(&["config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com"])
-        .current_dir(&repo_dir)
+        .args(&[
+            "config",
+            "user.email",
+            "41898282+github-actions[bot]@users.noreply.github.com",
+        ])
+        .current_dir(repo_dir)
         .status()
         .await?;
     if !status.success() {
@@ -31,19 +48,18 @@ pub async fn git(args: &Args) -> Result<(), Box<dyn std::error::Error + Send + S
     }
 
     let status = Command::new("git")
-        .args(&["add", &args.badge_name])
-        .current_dir(&repo_dir)
+        .args(&["add", filename])
+        .current_dir(repo_dir)
         .status()
         .await?;
     if !status.success() {
         return Err(format!("git add failed: {}", status).into());
     }
 
-   
-    let msg = format!("chore: Update {}", args.badge_name);
+    let msg = format!("chore: Update {}", filename);
     let status = Command::new("git")
         .args(&["commit", "-m", &msg, "--allow-empty"])
-        .current_dir(&repo_dir)
+        .current_dir(repo_dir)
         .status()
         .await?;
     if !status.success() {
@@ -52,7 +68,7 @@ pub async fn git(args: &Args) -> Result<(), Box<dyn std::error::Error + Send + S
 
     let status = Command::new("git")
         .args(&["push"])
-        .current_dir(&repo_dir)
+        .current_dir(repo_dir)
         .status()
         .await?;
     if !status.success() {
