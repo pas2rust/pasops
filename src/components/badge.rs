@@ -1,6 +1,7 @@
 use tokio::io::AsyncWriteExt;
 
 use super::prelude::*;
+
 pub async fn update_badge(args: &Args) -> MyResult<()> {
     let count = args.count.unwrap_or(0);
     let mut badge_url = format!(
@@ -10,8 +11,27 @@ pub async fn update_badge(args: &Args) -> MyResult<()> {
         args.color
     );
 
+    // Adicionar parâmetros de query
+    let mut query_params = Vec::new();
+    
     if let Some(logo) = &args.logo {
-        badge_url.push_str(&format!("?logo={}", logo));
+        query_params.push(("logo", logo.as_str()));
+    }
+    
+    // Adicionar cor do logo se fornecida
+    if let Some(logo_color) = &args.logo_color {
+        query_params.push(("logoColor", logo_color.as_str()));
+    }
+
+    // Construir a string de query
+    if !query_params.is_empty() {
+        badge_url.push('?');
+        let query_string = query_params
+            .iter()
+            .map(|(k, v)| format!("{}={}", k, v))
+            .collect::<Vec<_>>()
+            .join("&");
+        badge_url.push_str(&query_string);
     }
 
     let http = shields_http()?;

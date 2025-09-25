@@ -22,8 +22,12 @@ pub struct Args {
     pub color: String,
 
     /// Optional badge logo (e.g., "rust")
-    #[arg(long)]
+    #[arg(long, default_value = Some("testcafe"))]
     pub logo: Option<String>,
+
+    /// Optional badge logo color (e.g., "white")
+    #[arg(long, default_value = Some("white"))]
+    pub logo_color: Option<String>,
 }
 
 #[derive(Subcommand, Debug)]
