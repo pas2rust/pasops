@@ -1,11 +1,12 @@
-use tokio::process::Command;
 use super::prelude::*;
 use std::path::Path;
+use tokio::process::Command;
 
 pub async fn git(badge_path: &str, repo_dir: &str) -> MyResult<()> {
     let repo_dir = Path::new(repo_dir);
     let badge_path = Path::new(badge_path);
-    let filename = badge_path.file_name()
+    let filename = badge_path
+        .file_name()
         .and_then(|s| s.to_str())
         .ok_or("invalid badge file name")?;
 
@@ -14,13 +15,18 @@ pub async fn git(badge_path: &str, repo_dir: &str) -> MyResult<()> {
         .current_dir(&repo_dir)
         .output()
         .await?;
-    eprintln!("Files in {}:\n{}", repo_dir.display(), String::from_utf8_lossy(&ls.stdout));
+    eprintln!(
+        "Files in {}:\n{}",
+        repo_dir.display(),
+        String::from_utf8_lossy(&ls.stdout)
+    );
 
-    let cat = Command::new("cat")
-        .arg(&badge_path)
-        .output()
-        .await?;
-    eprintln!("Content of {}:\n{}", badge_path.display(), String::from_utf8_lossy(&cat.stdout));
+    let cat = Command::new("cat").arg(&badge_path).output().await?;
+    eprintln!(
+        "Content of {}:\n{}",
+        badge_path.display(),
+        String::from_utf8_lossy(&cat.stdout)
+    );
 
     Command::new("git")
         .args(&["config", "user.name", "github-actions[bot]"])
@@ -28,7 +34,11 @@ pub async fn git(badge_path: &str, repo_dir: &str) -> MyResult<()> {
         .output()
         .await?;
     Command::new("git")
-        .args(&["config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com"])
+        .args(&[
+            "config",
+            "user.email",
+            "41898282+github-actions[bot]@users.noreply.github.com",
+        ])
         .current_dir(&repo_dir)
         .output()
         .await?;
@@ -49,7 +59,11 @@ pub async fn git(badge_path: &str, repo_dir: &str) -> MyResult<()> {
         .output()
         .await?;
     if !commit.status.success() {
-        return Err(format!("git commit failed: {}", String::from_utf8_lossy(&commit.stderr)).into());
+        return Err(format!(
+            "git commit failed: {}",
+            String::from_utf8_lossy(&commit.stderr)
+        )
+        .into());
     }
 
     let push = Command::new("git")
