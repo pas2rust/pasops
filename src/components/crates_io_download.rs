@@ -5,17 +5,14 @@ pub async fn run_total_crates_io_downloads(user_login: &str) -> MyResult<u64> {
     let http = crates_http()?;
 
     let user_resp = http
-        .get(
-            &format!("/users/{}", user_login),
-            Vec::<(&str, &str)>::new(),
-        )
+        .get(&format!("/users/{user_login}"), Vec::<(&str, &str)>::new())
         .await
-        .map_err(|e| format!("failed to fetch user: {}", e))?;
+        .map_err(|e| format!("failed to fetch user: {e}"))?;
 
     let user_json: Value = user_resp
         .json()
         .await
-        .map_err(|e| format!("failed to parse user JSON: {}", e))?;
+        .map_err(|e| format!("failed to parse user JSON: {e}"))?;
 
     let user_id = user_json
         .get("user")
@@ -30,19 +27,16 @@ pub async fn run_total_crates_io_downloads(user_login: &str) -> MyResult<u64> {
     loop {
         let resp = http
             .get(
-                &format!(
-                    "/crates?per_page={}&page={}&user_id={}",
-                    per_page, page, user_id
-                ),
+                &format!("/crates?per_page={per_page}&page={page}&user_id={user_id}"),
                 Vec::<(&str, &str)>::new(),
             )
             .await
-            .map_err(|e| format!("failed to fetch crates page {}: {}", page, e))?;
+            .map_err(|e| format!("failed to fetch crates page {page}: {e}"))?;
 
         let json: Value = resp
             .json()
             .await
-            .map_err(|e| format!("failed to parse crates JSON: {}", e))?;
+            .map_err(|e| format!("failed to parse crates JSON: {e}"))?;
 
         let crates_arr = json
             .get("crates")

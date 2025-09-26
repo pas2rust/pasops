@@ -22,7 +22,7 @@ static SHIELDS_HTTP: LazyLock<Result<Http, String>> = LazyLock::new(|| {
 pub fn shields_http() -> MyResult<&'static Http> {
     match &*SHIELDS_HTTP {
         Ok(h) => Ok(h),
-        Err(s) => Err(Box::new(io::Error::new(io::ErrorKind::Other, s.clone()))),
+        Err(s) => Err(Box::new(io::Error::other(s.clone()))),
     }
 }
 
@@ -46,6 +46,6 @@ static CRATES_IO_HTTP: LazyLock<Result<Http, String>> = LazyLock::new(|| {
 pub fn crates_http() -> MyResult<&'static Http> {
     match &*CRATES_IO_HTTP {
         Ok(h) => Ok(h),
-        Err(s) => Err(Box::new(io::Error::new(io::ErrorKind::Other, s.clone()))),
+        Err(s) => Err(Box::new(io::Error::other(s.clone()))),
     }
 }

@@ -12,7 +12,7 @@ pub async fn git(badge_path: &str, repo_dir: &str) -> MyResult<()> {
 
     let ls = Command::new("ls")
         .arg("-la")
-        .current_dir(&repo_dir)
+        .current_dir(repo_dir)
         .output()
         .await?;
     eprintln!(
@@ -21,7 +21,7 @@ pub async fn git(badge_path: &str, repo_dir: &str) -> MyResult<()> {
         String::from_utf8_lossy(&ls.stdout)
     );
 
-    let cat = Command::new("cat").arg(&badge_path).output().await?;
+    let cat = Command::new("cat").arg(badge_path).output().await?;
     eprintln!(
         "Content of {}:\n{}",
         badge_path.display(),
@@ -29,33 +29,33 @@ pub async fn git(badge_path: &str, repo_dir: &str) -> MyResult<()> {
     );
 
     Command::new("git")
-        .args(&["config", "user.name", "github-actions[bot]"])
-        .current_dir(&repo_dir)
+        .args(["config", "user.name", "github-actions[bot]"])
+        .current_dir(repo_dir)
         .output()
         .await?;
     Command::new("git")
-        .args(&[
+        .args([
             "config",
             "user.email",
             "41898282+github-actions[bot]@users.noreply.github.com",
         ])
-        .current_dir(&repo_dir)
+        .current_dir(repo_dir)
         .output()
         .await?;
 
     let add = Command::new("git")
-        .args(&["add", "--", filename])
-        .current_dir(&repo_dir)
+        .args(["add", "--", filename])
+        .current_dir(repo_dir)
         .output()
         .await?;
     if !add.status.success() {
         return Err(format!("git add failed: {}", String::from_utf8_lossy(&add.stderr)).into());
     }
 
-    let msg = format!("chore: Update {}", filename);
+    let msg = format!("chore: Update {filename}");
     let commit = Command::new("git")
-        .args(&["commit", "-m", &msg, "--allow-empty"])
-        .current_dir(&repo_dir)
+        .args(["commit", "-m", &msg, "--allow-empty"])
+        .current_dir(repo_dir)
         .output()
         .await?;
     if !commit.status.success() {
@@ -67,8 +67,8 @@ pub async fn git(badge_path: &str, repo_dir: &str) -> MyResult<()> {
     }
 
     let push = Command::new("git")
-        .args(&["push"])
-        .current_dir(&repo_dir)
+        .args(["push"])
+        .current_dir(repo_dir)
         .output()
         .await?;
     if !push.status.success() {
@@ -76,8 +76,8 @@ pub async fn git(badge_path: &str, repo_dir: &str) -> MyResult<()> {
     }
 
     let log = Command::new("git")
-        .args(&["log", "--oneline", "-3"])
-        .current_dir(&repo_dir)
+        .args(["log", "--oneline", "-3"])
+        .current_dir(repo_dir)
         .output()
         .await?;
     eprintln!("Last 3 commits:\n{}", String::from_utf8_lossy(&log.stdout));

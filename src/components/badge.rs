@@ -26,7 +26,7 @@ pub async fn update_badge(args: &Args) -> MyResult<()> {
         badge_url.push('?');
         let query_string = query_params
             .iter()
-            .map(|(k, v)| format!("{}={}", k, v))
+            .map(|(k, v)| format!("{k}={v}"))
             .collect::<Vec<_>>()
             .join("&");
         badge_url.push_str(&query_string);
@@ -36,12 +36,12 @@ pub async fn update_badge(args: &Args) -> MyResult<()> {
     let resp = http
         .get(&badge_url, Vec::<(&str, &str)>::new())
         .await
-        .map_err(|e| format!("failed to fetch shields.io error: {}", e))?;
+        .map_err(|e| format!("failed to fetch shields.io error: {e}"))?;
     let status = resp.status();
     let svg = resp.text().await?;
 
     if !status.is_success() {
-        return Err(format!("shields.io returned HTTP {}: {}", status, svg).into());
+        return Err(format!("shields.io returned HTTP {status}: {svg}").into());
     }
 
     let local_path = &args.badge_name;
