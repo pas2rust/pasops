@@ -1,78 +1,64 @@
 use super::prelude::*;
 use std::path::Path;
-use tokio::{fs, process::Command};
+use tokio::process::Command;
 
-pub async fn git(args: &Args) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let repo_dir = Path::new(&args.destiny);
-    if !repo_dir.exists() {
-        return Err(format!("destination '{}' does not exist", args.destiny).into());
-    }
-
+pub async fn git(args: &Args) -> MyResult<()> {
+    let repo_dir = Path::new(&args.destiny).canonicalize()?;
     let src = Path::new(&args.badge_name);
-    if !src.exists() {
-        return Err(format!("source file '{}' not found", src.display()).into());
-    }
-
     let filename = src
         .file_name()
         .and_then(|s| s.to_str())
         .ok_or("invalid badge file name")?;
-
     let dest_path = repo_dir.join(filename);
-    if dest_path.exists() {
-        fs::remove_file(&dest_path).await?;
-    }
 
-    fs::rename(&src, &dest_path).await?;
-
-    let status = Command::new("git")
+    tokio::fs::copy(&src, &dest_path).await?;
+    Command::new("git")
         .args(&["config", "user.name", "github-actions[bot]"])
-        .current_dir(repo_dir)
-        .status()
+        .current_dir(&repo_dir)
+        .output()
         .await?;
-    if !status.success() {
-        return Err(format!("git config user.name failed: {}", status).into());
-    }
-
-    let status = Command::new("git")
+    Command::new("git")
         .args(&[
             "config",
             "user.email",
             "41898282+github-actions[bot]@users.noreply.github.com",
         ])
-        .current_dir(repo_dir)
-        .status()
+        .current_dir(&repo_dir)
+        .output()
         .await?;
-    if !status.success() {
-        return Err(format!("git config user.email failed: {}", status).into());
+
+    // git add
+    let add = Command::new("git")
+        .args(&["add", "--", filename])
+        .current_dir(&repo_dir)
+        .output()
+        .await?;
+    if !add.status.success() {
+        let err = String::from_utf8_lossy(&add.stderr);
+        return Err(format!("git add failed: {}", err).into());
     }
 
-    let status = Command::new("git")
-        .args(&["add", filename])
-        .current_dir(repo_dir)
-        .status()
-        .await?;
-    if !status.success() {
-        return Err(format!("git add failed: {}", status).into());
-    }
-
+    // git commit --allow-empty
     let msg = format!("chore: Update {}", filename);
-    let status = Command::new("git")
+    let commit = Command::new("git")
         .args(&["commit", "-m", &msg, "--allow-empty"])
-        .current_dir(repo_dir)
-        .status()
+        .current_dir(&repo_dir)
+        .output()
         .await?;
-    if !status.success() {
-        return Err(format!("git commit failed: {}", status).into());
+    if !commit.status.success() {
+        let stderr = String::from_utf8_lossy(&commit.stderr);
+        return Err(format!("git commit failed: {}", stderr).into());
     }
 
-    let status = Command::new("git")
+    // git push
+    let push = Command::new("git")
         .args(&["push"])
-        .current_dir(repo_dir)
-        .status()
+        .current_dir(&repo_dir)
+        .output()
         .await?;
-    if !status.success() {
-        return Err(format!("git push failed: {}", status).into());
+    if !push.status.success() {
+        let stderr = String::from_utf8_lossy(&push.stderr);
+        return Err(format!("git push failed: {}", stderr).into());
     }
 
     Ok(())
