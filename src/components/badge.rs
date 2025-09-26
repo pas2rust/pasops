@@ -1,7 +1,7 @@
-use std::path::Path;
+use tokio::io::AsyncWriteExt;
 
 use super::prelude::*;
-use tokio::io::AsyncWriteExt;
+
 pub async fn update_badge(args: &Args) -> MyResult<()> {
     let count = args.count.unwrap_or(0);
     let mut badge_url = format!(
@@ -10,8 +10,8 @@ pub async fn update_badge(args: &Args) -> MyResult<()> {
         count,
         args.color
     );
-
     let mut query_params = Vec::new();
+    
     if let Some(logo) = &args.logo {
         query_params.push(("logo", logo.as_str()));
     }
@@ -34,30 +34,16 @@ pub async fn update_badge(args: &Args) -> MyResult<()> {
         .await
         .map_err(|e| format!("failed to fetch shields.io error: {}", e))?;
     let status = resp.status();
-
-    let bytes = resp
-        .bytes()
-        .await
-        .map_err(|e| format!("failed to read shields.io response body as bytes: {}", e))?;
+    let svg = resp.text().await?;
 
     if !status.is_success() {
-        let txt = String::from_utf8_lossy(&bytes);
-        return Err(format!("shields.io returned HTTP {}: {}", status, txt).into());
+        return Err(format!("shields.io returned HTTP {}: {}", status, svg).into());
     }
 
-    if bytes.is_empty() {
-        return Err("shields.io returned an empty body".into());
-    }
+    let mut file = tokio::fs::File::create(&args.badge_name).await?;
+    file.write_all(svg.as_bytes()).await?;
 
-    let path = Path::new(&args.badge_name);
-    if let Some(parent) = path.parent() {
-        tokio::fs::create_dir_all(parent).await?;
-    }
-
-    let mut file = tokio::fs::File::create(path).await?;
-    file.write_all(&bytes).await?;
-    file.sync_all().await?;
-    drop(file);
+    git(&args.badge_name, &args.destiny).await?;
 
     Ok(())
 }
