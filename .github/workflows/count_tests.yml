@@ -1,0 +1,46 @@
+name: Update Tests Badge
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  create_badge:
+    runs-on: ubuntu-latest
+    environment: badges
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Install pasops CLI
+        run: cargo install pasops --force
+
+      - name: Checkout Badges Repository
+        uses: actions/checkout@v5
+        with:
+          repository: pas2rust/badges
+          path: badges
+          token: ${{ secrets.BADGE_TOKEN }}
+
+      - name: Generate Badge
+        run: |
+          pasops tests-badges \
+            --user pas2rust \
+            --badge-name pasops-tests.svg \
+            --label tests \
+            --color success \
+            --logo testcafe \
+            --logo-color white \
+            --destiny badges 
+
